@@ -13,6 +13,32 @@ namespace WindowsFormsApplication1
     public partial class Form1 : Form
     {
         string[] ways = new string[4] { "S", "E", "N", "W" };
+        int[] arrayHW = new int[6];
+        List<string> prohod = new List<string>();
+        List<string> prohodOut = new List<string>();
+        public void MakeTable()
+        {
+            prohod.Add("1000"); prohod.Add("0100"); prohod.Add("1100"); prohod.Add("0010");
+            prohod.Add("1010"); prohod.Add("0110"); prohod.Add("1110"); prohod.Add("0001");
+            prohod.Add("1001"); prohod.Add("0101"); prohod.Add("1101"); prohod.Add("0011");
+            prohod.Add("1011"); prohod.Add("0111"); prohod.Add("1111");
+        }
+        private static bool NorthNo(String s)
+        {
+            return s.ToLower()[0] == '0';
+        }
+        private static bool SouthNo(String s)
+        {
+            return s.ToLower()[1] == '0';
+        }
+        private static bool WesthNo(String s)
+        {
+            return s.ToLower()[2] == '0';
+        }
+        private static bool EasthNo(String s)
+        {
+            return s.ToLower()[3] == '0';
+        }
 
         public int PointOut(string inStr, int prevInt) 
         {
@@ -32,17 +58,97 @@ namespace WindowsFormsApplication1
             return outWay;
         }
 
+        public void HeightWidth(string strIn)
+        {
+            int vector = 0;
+            int heightCurrent = 0; int heightMax = 0;
+            int widthCurrent = 0; int widthMax = 0; int widthMin = 0;
+            for (int i = 0; i < strIn.Length; i++)
+            {
+                vector = PointOut(strIn[i].ToString(), vector);
+                if (strIn[i].ToString() == "W")
+                {
+                    switch (vector)
+                    {
+                    case 0:
+                            heightCurrent++;
+                            if (heightCurrent > heightMax)
+                                heightMax = heightCurrent;
+                            if (i == strIn.Length - 1)
+                                arrayHW[5] = 0; //выход на южной стороне
+                            break;
+                    case 3:
+                            widthCurrent--;
+                            if (widthCurrent < widthMin)
+                                widthMin = widthCurrent;
+                            if (i == strIn.Length - 1)
+                                arrayHW[5] = 3; //выход на задной стороне
+                            break;
+                    case 2:
+                            heightCurrent--;
+                            if (i == strIn.Length - 1)
+                                arrayHW[5] = 2; //выход на северной стороне
+                            break;
+                        case 1:
+                            widthCurrent++;
+                            if (widthCurrent > widthMax)
+                                widthMax = widthCurrent;
+                            if (i == strIn.Length - 1)
+                                arrayHW[5] = 1; //выход на восточной стороне
+                            break;
+                    }
+                }
+            }
+            int widthMain = Math.Abs(widthMin) + widthMax;
+            int pointIn = widthMain - widthMax;
+            arrayHW[0] = heightMax; //высота
+            arrayHW[1] = widthMain; //ширина
+            arrayHW[2] = pointIn; //точка входа (начиная с 1)
+            arrayHW[3] = heightCurrent; //точка выхода (высота)
+            arrayHW[4] = widthCurrent; //точка выхода (ширина, относительно входа (вход.ширина == 0))
+        }
 
+        public void Solving(string strIn)
+        {
+            int vector = 0;
+            string temp = "XXXX";
+            StringBuilder tempStr = new StringBuilder(temp);
+            for (int i = 1; i < strIn.Length; i++)
+            {
+                vector = PointOut(strIn[i].ToString(), vector);
+                if (strIn[i].ToString() == "W")
+                {
+                    switch (vector)
+                    {
+                        case 0:
+                            prohodOut.RemoveAll(SouthNo);
+                            break;
+                        case 1:
+                            prohodOut.RemoveAll(EasthNo);
+                            break;
+                        case 2:
+                            //prohodOut.RemoveAll(NorthNo);
+
+                            break;
+                        case 3:
+                            //prohodOut.RemoveAll(WesthNo);
+                            tempStr[2] = '1';
+                            break;
+                    }
+                }
+            }
+        }
         public Form1()
         {
             InitializeComponent();
-            
+            MakeTable();
+            prohodOut = prohod;
         }
 
         public string FileTxt() //считывание
         {
             string line;            
-            System.IO.StreamReader file = new System.IO.StreamReader(@"C:\Users\asustud\Desktop\small-test.in.txt");
+            System.IO.StreamReader file = new System.IO.StreamReader(@"C:\Users\User\Desktop\small-test.in.txt");
             string inText = "";
             while ((line = file.ReadLine()) != null)
             {
@@ -172,44 +278,18 @@ namespace WindowsFormsApplication1
                     temp = PointOut(subStr1[j].ToString(), temp);
                     strTest += temp.ToString();
                 }
+                HeightWidth(subStr1);
+                Solving(subStr1);
                 outStr += "Case #" + i + "\r\n";
-                outStr += strTest + "\r\n";
+                outStr += strTest + " " + arrayHW[4].ToString() + "\r\n";
                 temp = 0; strTest = "";
             }
-            textBox2.Text = outStr;
+            textBox2.Text = outStr + "\r\n";
+            for (int i = 0; i < prohodOut.Count; i++)
+            {
+                textBox2.Text += prohodOut[i];
+            }
         }
-
-        //public Array MakeMatrix(int max)
-        //{
-        //    int[,] matr = new int[max * 2, max * 2];
-        //    //int[] arrOut = new int[2];
-        //    //for (int i = 0; i < max * 2; i++)
-        //    //{ 
-        //    //    //start point = [0,max]
-        //    //}
-        //    return matr;
-        //}
-
-        //public Array MakeMatrix(string str, Array matr, int max)
-        //{
-        //    int[] arrOut = new int[2];
-        //    for (int i = 0; i < max * 2; i++)//start point = [0,max]
-        //    {
-        //        for (int j = 1; j < str.Length; j++)
-        //        {
-        //            if (str[j].ToString() != str[j - 1].ToString())
-        //            {
-        //                //меняем направление
-        //            }
-        //            else
-        //            {
-        //                //идем прямо
-        //            }
-
-        //        }
-        //    }
-        //    return arrOut;
-        //}
 
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
